@@ -6,6 +6,7 @@ from evidence_scorecard import build
 from downside_guard import assess
 from retrospective import replay
 from risk_event import build_event
+from session_gate import session_gate
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -16,15 +17,12 @@ def main():
     result=build(price,research)
     observations=price.get("observations",[])
     downside=assess(observations)
-    from datetime import date,datetime,timezone
-    latest=downside.get("latest_session")
-    if latest:
-        age=(datetime.now(timezone.utc).date()-date.fromisoformat(latest)).days
-        downside["calendar_age_days"]=age
-        if age<0 or age>4:
-            downside["status"]="STALE_DATA"
-            downside["severity"]="UNKNOWN"
-            downside["warnings"].append("STALE_OR_FUTURE_PRICE_DATA")
+    gate=session_gate(downside.get("latest_session"))
+    downside["session_gate"]=gate
+    if gate["status"]!="ACCEPTED":
+        downside["status"]="PRICE_SESSION_"+gate["status"]
+        downside["severity"]="UNKNOWN"
+        downside["warnings"].append("PRICE_SESSION_"+gate["status"])
     result["downside_guard"]=downside
     event=build_event(downside)
     (directory/"risk_event.json").write_text(json.dumps(event,indent=2)+"\n")
