@@ -34,7 +34,7 @@ def main():
     (directory/"risk_event.json").write_text(json.dumps(event,indent=2)+"\n")
     if downside["severity"] in ("HIGH","CRITICAL"):
         result["status"]="DOWNSIDE_RISK_WARNING"
-    (directory/"downside_retrospective.json").write_text(json.dumps(replay(observations),indent=2)+"\n")
+    (directory/"downside_retrospective.json").write_text(json.dumps(replay(completed),indent=2)+"\n")
     (directory/"sentinel_scorecard.json").write_text(json.dumps(result,indent=2)+"\n")
     print("scorecard",result["status"],"downside_severity",downside["severity"],"trading_allowed",result["validated_for_trading"])
     if downside["severity"] in ("HIGH","CRITICAL"):
