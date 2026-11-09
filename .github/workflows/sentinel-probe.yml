@@ -40,6 +40,7 @@ jobs:
             artifacts/forward_levels.json
             artifacts/isa_positioning_report.json
             artifacts/isa_positioning_report.md
+            artifacts/sentinel_dashboard.html
             artifacts/downside_retrospective.json
             artifacts/forward_signal_audit.json
             artifacts/signal_baseline.json
