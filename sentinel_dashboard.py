@@ -10,6 +10,14 @@ def render(report, scorecard=None):
         return "Not established" if v is None else e(v)+suffix
     levels=report.get("forward_levels") or {}
     quality=report.get("data_quality") or {}
+    audit=(scorecard.get("decision_intelligence") or {}).get("independent_price_evidence") or {}
+    def audit_table():
+        rows=[("Price corroboration",audit.get("status","NOT_VERIFIED")),
+              ("Provider count",audit.get("independent_providers",0)),
+              ("Verification reason",audit.get("reason","Not supplied")),
+              ("Risk assessment",report.get("downside_severity","UNKNOWN")),
+              ("Positioning confidence",report.get("confidence","UNKNOWN"))]
+        return "".join("<tr><th scope=\\"row\\">"+e(k)+"</th><td>"+e(v)+"</td></tr>" for k,v in rows)
     catalyst=report.get("next_catalyst")
     scenarios=report.get("scenario_matrix") or {}
     events=report.get("event_positioning_rules") or {}
@@ -41,7 +49,7 @@ p{line-height:1.55;color:#cbd6e4}small,.subtle{color:#aebed1;line-height:1.5}
 .section{margin-top:28px}.scenario{border-top:3px solid #6b9dc9}
 ul{margin:10px 0 0;padding-left:19px}li{margin:9px 0;color:#d0dae7;line-height:1.45}
 .warning{border-left:4px solid #e5a25c;padding:14px 18px;background:#30271f;color:#ffdbb9;margin:20px 0}
-.footer{margin-top:30px;border-top:1px solid #2c394b;padding-top:20px;color:#aebed1;font-size:12px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px 8px;border-bottom:1px solid #2c394b;font-size:14px}th{color:#aebed1;font-weight:500;width:43%}.footer{margin-top:30px;border-top:1px solid #2c394b;padding-top:20px;color:#aebed1;font-size:12px}
 a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:760px){.grid,.two{grid-template-columns:1fr 1fr}.kv{grid-template-columns:1fr}}
 @media(max-width:460px){.grid,.two{grid-template-columns:1fr}main{padding:18px 14px 50px}.hero{padding:20px}}
@@ -69,7 +77,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
 <div class="two section">
 <section class="card"><h2>Evidence required before considering an add</h2><ul>{{ADD}}</ul></section>
 <section class="card"><h2>Evidence prompting a reduction review</h2><ul>{{REDUCE}}</ul></section></div>
-<section class="card section"><h2>Safety & provenance</h2>
+<section class="card section"><h2>Evidence audit</h2><p>Verification and confidence are displayed separately from the decision hypothesis.</p><table>{{AUDIT}}</table></section>\n<section class="card section"><h2>Safety & provenance</h2>
 <ul><li>Completed-session accepted: {{SESSION}}</li><li>Independent price verification: {{VERIFIED}}</li><li>Pre-trade gate: {{PRETRADE}}</li><li>Catalyst outcomes verified: {{CATALYST_VERIFIED}}</li><li>All positions and order approvals remain outside this public workflow.</li></ul></section>
 <div class="footer">Research decision support only. Not a broker order, personalised execution instruction or prediction. No automatic trades. The long-term SIPP is excluded. Prices are pence (GBp).</div>
 </main></body></html>"""
@@ -92,6 +100,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
         "SCENARIOS":"".join(scenario(x) for x in ("bull","base","bear")),
         "ADD":items(report.get("change_to_consider_add",[])),
         "REDUCE":items(report.get("change_to_review_reduction",[])),
+        "AUDIT":audit_table(),
         "SESSION":e(quality.get("completed_session_accepted")),
         "VERIFIED":e(quality.get("independently_verified_price")),
         "PRETRADE":e(report.get("pretrade_gate")),
@@ -101,5 +110,5 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
         html=html.replace("{{"+key+"}}",value)
     return html
 
-def write_dashboard(report,path):
-    Path(path).write_text(render(report),encoding="utf-8")
+def write_dashboard(report,path,scorecard=None):
+    Path(path).write_text(render(report,scorecard),encoding="utf-8")
