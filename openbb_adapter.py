@@ -4,7 +4,7 @@ from datetime import date
 class ProviderUnavailable(RuntimeError):
     pass
 
-def fetch_avct_history(start_date="2026-10-01"):
+def fetch_avct_history(start_date="2026-07-01"):
     try:
         from openbb import obb
     except ImportError as exc:
