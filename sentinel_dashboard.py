@@ -1,13 +1,22 @@
 """Generate a self-contained, read-only decision dashboard from Sentinel research."""
 from html import escape
 from pathlib import Path
+from math import isfinite
 
 def render(report, scorecard=None):
     scorecard=scorecard or {}
     def e(v):
         return escape("—" if v is None else str(v),quote=True)
     def number(v,suffix=""):
-        return "Not established" if v is None else e(v)+suffix
+        if v is None:
+            return "Not established"
+        try:
+            n=float(v)
+            if not isfinite(n):
+                return "Not established"
+            return e(f"{n:,.2f}")+suffix
+        except (TypeError,ValueError):
+            return e(v)+suffix
     levels=report.get("forward_levels") or {}
     quality=report.get("data_quality") or {}
     audit=(scorecard.get("decision_intelligence") or {}).get("independent_price_evidence") or {}
@@ -69,7 +78,7 @@ p{line-height:1.55;color:#cbd6e4}small,.subtle{color:#aebed1;line-height:1.5}
 .pill{display:inline-block;border:1px solid #986945;background:#422d23;color:#ffd1aa;border-radius:20px;padding:6px 11px;font-size:12px;font-weight:700}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .card,.scenario{background:#111c2c;border:1px solid #2a3a4f;border-radius:14px;padding:19px;min-width:0}
-.value{font-size:25px;font-weight:750;margin:8px 0;overflow-wrap:anywhere}.label{font-size:12px;color:#aebed1}
+.value{font-size:25px;font-weight:750;margin:8px 0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.label{font-size:12px;color:#aebed1}
 .section{margin-top:28px}.scenario{border-top:3px solid #6b9dc9}
 ul{margin:10px 0 0;padding-left:19px}li{margin:9px 0;color:#d0dae7;line-height:1.45}
 .warning{border-left:4px solid #e5a25c;padding:14px 18px;background:#30271f;color:#ffdbb9;margin:20px 0}
