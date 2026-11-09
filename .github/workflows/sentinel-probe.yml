@@ -37,4 +37,5 @@ jobs:
             artifacts/openbb_probe.json
             artifacts/public_research.json
             artifacts/sentinel_scorecard.json
+            artifacts/downside_retrospective.json
           if-no-files-found: warn
