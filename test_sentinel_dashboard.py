@@ -20,8 +20,8 @@ class DashboardTests(unittest.TestCase):
     def test_dashboard_is_readable_and_offline(self):
         html=render(self.report())
         self.assertIn("<!doctype html>",html)
-        self.assertIn("53.8p",html)
-        self.assertIn("51.2p",html)
+        self.assertIn("53.80p",html)
+        self.assertIn("51.20p",html)
         self.assertIn("Manual approval",html) if "Manual approval" in html else self.assertIn("Owner approval required",html)
         self.assertNotIn("<script",html)
         self.assertNotIn("fetch(",html)
@@ -88,5 +88,22 @@ class DashboardTests(unittest.TestCase):
         html=render(self.report(),scorecard)
         self.assertIn("Breakout and breakdown evidence",html)
         self.assertIn("CLOSE ABOVE PRIOR RANGE",html)
-        self.assertIn("55p",html)
+        self.assertIn("55.00p",html)
         self.assertNotIn("{{STRUCTURE}}",html)
+
+    def test_decision_steer_precedes_supporting_evidence(self):
+        html=render(self.report())
+        self.assertIn("DEFENSIVE — PRIORITISE CAPITAL PROTECTION",html)
+        self.assertIn("What changes the view",html)
+        self.assertIn("Independent price verification outstanding",html)
+        self.assertLess(html.index("Sentinel decision brief"),html.index("Annotated price and volume"))
+        self.assertLess(html.index("What changes the view"),html.index("Technical map"))
+        self.assertIn("Owner approval required",html)
+        self.assertNotIn("{{STEER}}",html)
+
+    def test_float_price_is_rounded_for_mobile(self):
+        report=self.report()
+        report["observed_close_pence"]=53.79999923706055
+        html=render(report)
+        self.assertIn("53.80p",html)
+        self.assertNotIn("53.79999923706055",html)
