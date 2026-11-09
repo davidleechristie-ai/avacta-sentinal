@@ -38,8 +38,8 @@ def main():
     summary=os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         with open(summary,"a") as out:
-            out.write("## AVCT downside surveillance\\n\\n")
-            out.write("**Severity:** "+downside["severity"]+"\\n\\n")
-            out.write("**Signals:** "+(", ".join(downside["warnings"]) or "None confirmed")+"\\n\\n")
-            out.write("Research warning only; not an automated trade instruction.\\n")
+            out.write("## AVCT downside surveillance\n\n")
+            out.write("**Severity:** "+downside["severity"]+"\n\n")
+            out.write("**Signals:** "+(", ".join(downside["warnings"]) or "None confirmed")+"\n\n")
+            out.write("Research warning only; not an automated trade instruction.\n")
 if __name__=="__main__":main()
