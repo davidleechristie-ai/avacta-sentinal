@@ -22,10 +22,15 @@ jobs:
         run: python -m unittest discover -p 'test_*.py' -v
       - name: Run real provider probe
         run: python live_probe.py
+      - name: Collect FCA, issuer and clinical trial evidence
+        if: always()
+        run: python research_pipeline.py
       - name: Preserve diagnostic artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: avct-openbb-probe
-          path: artifacts/openbb_probe.json
+          path: |
+            artifacts/openbb_probe.json
+            artifacts/public_research.json
           if-no-files-found: warn
