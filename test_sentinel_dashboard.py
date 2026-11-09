@@ -93,7 +93,7 @@ class DashboardTests(unittest.TestCase):
 
     def test_decision_steer_precedes_supporting_evidence(self):
         html=render(self.report())
-        self.assertIn("DEFENSIVE — PRIORITISE CAPITAL PROTECTION",html)
+        self.assertIn("BROKEN SUPPORT: TEST SELLER EXHAUSTION",html)
         self.assertIn("What changes the view",html)
         self.assertIn("Independent price verification outstanding",html)
         self.assertLess(html.index("Sentinel decision brief"),html.index("Annotated price and volume"))
@@ -107,3 +107,10 @@ class DashboardTests(unittest.TestCase):
         html=render(report)
         self.assertIn("53.80p",html)
         self.assertNotIn("53.79999923706055",html)
+
+    def test_analysis_does_not_claim_volume_proves_accumulation(self):
+        html=render(self.report())
+        self.assertIn("not whether the net driver is selling, short covering or accumulation",html)
+        self.assertIn("former weekly support at 60.00p",html)
+        self.assertIn("already-disclosed science",html)
+        self.assertIn("not independently corroborated",html)
