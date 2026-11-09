@@ -28,7 +28,7 @@ class PositioningTests(unittest.TestCase):
         r=build_report(d,w,c,{},{"decision":"NO_ACTIONABLE_ORDERS"},{"severity":"NORMAL"})
         self.assertEqual(r["stance"],"WAIT_FOR_VERIFIED_EVIDENCE")
     def test_verified_bull_still_requires_approval(self):
-        d,w,c=self.fixture(price_source_status="INDEPENDENTLY_VERIFIED")
+        d,w,c=self.fixture(price_source_status="INDEPENDENTLY_VERIFIED",independent_price_evidence={"status":"MATCHED","independent_providers":2})
         w.update(weekly_trend_pattern="HIGHER_HIGHS_AND_LOWS",weekly_breakout=True)
         r=build_report(d,w,c,{},{"decision":"WAIT_FOR_CONFIRMATION"},{"severity":"NORMAL"})
         self.assertEqual(r["stance"],"CONSIDER_ADD_ONLY_AFTER_MANUAL_CHECKS")
