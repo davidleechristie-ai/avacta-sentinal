@@ -10,6 +10,7 @@ from session_gate import session_gate
 from completed_sessions import completed_rows
 from price_bars import clean_bars
 from risk_transition import transition
+from decision_engine import build_decision
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -35,6 +36,7 @@ def main():
         downside["severity"]="UNKNOWN"
         downside["warnings"].append("PRICE_SESSION_"+gate["status"])
     result["downside_guard"]=downside
+    result["decision_intelligence"]=build_decision(downside, price.get("quality",{}))
     event=build_event(downside)
     (directory/"risk_event.json").write_text(json.dumps(event,indent=2)+"\n")
     if downside["severity"] in ("HIGH","CRITICAL"):
