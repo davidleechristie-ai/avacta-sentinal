@@ -62,3 +62,15 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("not a backtested trading strategy",html)
     def test_no_matured_warning_outcomes(self):
         self.assertIn("No matured historical warning outcomes",render(self.report()))
+
+    def test_chart_is_embedded_in_published_html(self):
+        report=self.report()
+        scorecard={"technical_chart_html":'<svg viewBox="0 0 850 370"><polyline points="0,0 1,1"/></svg>'}
+        html=render(report,scorecard)
+        self.assertIn("Annotated price and volume",html)
+        self.assertIn('<svg viewBox="0 0 850 370">',html)
+        self.assertIn("<polyline",html)
+        self.assertNotIn("{{CHART}}",html)
+    def test_chart_unavailable_message_is_visible(self):
+        html=render(self.report())
+        self.assertIn("Chart unavailable until completed-session data is processed",html)
