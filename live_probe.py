@@ -3,12 +3,14 @@ import json
 import sys
 from pathlib import Path
 from openbb_adapter import ProviderUnavailable, fetch_avct_history
+from data_quality import assess_history
 
 def main():
     path = Path("artifacts/openbb_probe.json")
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         result = fetch_avct_history()
+        result["quality"] = assess_history(result["observations"])
         result["status"] = "UNVERIFIED_PRICE_DATA"
         result["observations"] = [{key: str(value) for key, value in row.items()} for row in result["observations"]]
         status = 0
