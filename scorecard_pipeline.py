@@ -18,6 +18,7 @@ from tradermonty_weekly import weekly_review
 from tradermonty_catalyst_overlay import assess_catalysts, combine
 from tradermonty_pretrade import check as pretrade_check
 from isa_positioning_report import build_report, markdown as positioning_markdown
+from forward_levels import map_levels
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -48,8 +49,10 @@ def main():
     catalysts=assess_catalysts(research,result["decision_intelligence"]["as_of"])
     result["trading_skill_overlay"]=combine(result["decision_intelligence"],weekly,catalysts)
     result["manual_pretrade_gate"]=pretrade_check()
-    positioning=build_report(result["decision_intelligence"],weekly,catalysts,result["trading_skill_overlay"],result["manual_pretrade_gate"],downside)
+    levels=map_levels(completed,downside.get("latest_close"))
+    positioning=build_report(result["decision_intelligence"],weekly,catalysts,result["trading_skill_overlay"],result["manual_pretrade_gate"],downside,levels)
     result["isa_positioning"]=positioning
+    (directory/"forward_levels.json").write_text(json.dumps(levels,indent=2)+"\n")
     (directory/"isa_positioning_report.json").write_text(json.dumps(positioning,indent=2)+"\n")
     (directory/"isa_positioning_report.md").write_text(positioning_markdown(positioning))
     (directory/"tradermonty_weekly.json").write_text(json.dumps(weekly,indent=2)+"\n")
