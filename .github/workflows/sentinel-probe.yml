@@ -25,6 +25,9 @@ jobs:
       - name: Collect FCA, issuer and clinical trial evidence
         if: always()
         run: python research_pipeline.py
+      - name: Assemble five-factor evidence scorecard
+        if: always()
+        run: python scorecard_pipeline.py
       - name: Preserve diagnostic artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -33,4 +36,5 @@ jobs:
           path: |
             artifacts/openbb_probe.json
             artifacts/public_research.json
+            artifacts/sentinel_scorecard.json
           if-no-files-found: warn
