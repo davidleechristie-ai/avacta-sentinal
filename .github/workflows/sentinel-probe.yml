@@ -39,5 +39,6 @@ jobs:
             artifacts/sentinel_scorecard.json
             artifacts/downside_retrospective.json
             artifacts/forward_signal_audit.json
+            artifacts/signal_baseline.json
             artifacts/risk_event.json
           if-no-files-found: warn
