@@ -9,6 +9,7 @@ from risk_event import build_event
 from session_gate import session_gate
 from completed_sessions import completed_rows
 from price_bars import clean_bars
+from risk_transition import transition
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -26,6 +27,7 @@ def main():
     downside["latest_provider_session_gate"]=latest_gate
     gate=session_gate(downside.get("latest_session"))
     downside["session_gate"]=gate
+    downside["risk_transition"]=transition(completed)
     downside["rejected_price_bars"]=len(rejected)
     downside["price_data_provenance"]="OPENBB_YFINANCE_UNVERIFIED"
     if gate["status"]!="ACCEPTED":
