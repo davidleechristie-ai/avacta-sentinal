@@ -77,6 +77,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
 <div class="card"><div class="label">Weekly structure</div><div class="value" style="font-size:17px">{{TREND}}</div><small>Chart image not reviewed</small></div>
 <div class="card"><div class="label">Relative weekly volume</div><div class="value">{{VOLUME}}</div><small>Historical comparison</small></div></div>
 <div class="warning"><strong>Data-quality gate:</strong> {{QUALITY}}. No executable entry permission is granted by this dashboard.</div>
+<section class="card section"><h2>Annotated price and volume</h2><p>Completed-session closing prices, observed historical levels and volume. Prices remain independently unverified.</p>{{CHART}}</section>
 <div class="two section">
 <section class="card"><h2>Technical map</h2><div class="kv">
 <div><div class="label">Prior eight-week support</div><div class="value" style="font-size:21px">{{SUPPORT}}</div></div>
