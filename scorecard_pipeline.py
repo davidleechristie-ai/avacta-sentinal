@@ -12,6 +12,7 @@ from price_bars import clean_bars
 from risk_transition import transition
 from decision_engine import build_decision
 from forward_signal_audit import audit
+from signal_baseline import compare
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -42,6 +43,7 @@ def main():
     (directory/"risk_event.json").write_text(json.dumps(event,indent=2)+"\n")
     if downside["severity"] in ("HIGH","CRITICAL"):
         result["status"]="DOWNSIDE_RISK_WARNING"
+    (directory/"signal_baseline.json").write_text(json.dumps(compare(completed),indent=2)+"\n")
     (directory/"forward_signal_audit.json").write_text(json.dumps(audit(completed),indent=2)+"\n")
     (directory/"downside_retrospective.json").write_text(json.dumps(replay(completed),indent=2)+"\n")
     (directory/"sentinel_scorecard.json").write_text(json.dumps(result,indent=2)+"\n")
