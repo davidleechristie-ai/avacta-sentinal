@@ -20,6 +20,7 @@ def render(report, scorecard=None):
         return "".join("<tr><th scope='row'>"+e(k)+"</th><td>"+e(v)+"</td></tr>" for k,v in rows)
     performance=scorecard.get("forward_signal_audit") or {}
     chart=scorecard.get("technical_chart_html") or "<p>Chart unavailable until completed-session data is processed.</p>"
+    weekly_chart=scorecard.get("weekly_chart_html") or "<p>Weekly chart unavailable until sufficient completed sessions are processed.</p>"
     def performance_table():
         summary=performance.get("summary") or {}
         if not summary:
@@ -77,7 +78,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
 <div class="card"><div class="label">Weekly structure</div><div class="value" style="font-size:17px">{{TREND}}</div><small>Chart image not reviewed</small></div>
 <div class="card"><div class="label">Relative weekly volume</div><div class="value">{{VOLUME}}</div><small>Historical comparison</small></div></div>
 <div class="warning"><strong>Data-quality gate:</strong> {{QUALITY}}. No executable entry permission is granted by this dashboard.</div>
-<section class="card section"><h2>Annotated price and volume</h2><p>Completed-session closing prices, observed historical levels and volume. Prices remain independently unverified.</p>{{CHART}}</section>
+<section class="card section"><h2>Annotated price and volume</h2><p>Completed-session closing prices, observed historical levels and volume. Prices remain independently unverified.</p>{{CHART}}<h3 style="margin-top:24px">Weekly trend · up to 26 trading weeks</h3><p>Weekly closing prices and summed volume. The latest week may be incomplete; annotations remain historical and unverified.</p>{{WEEKLY_CHART}}</section>
 <div class="two section">
 <section class="card"><h2>Technical map</h2><div class="kv">
 <div><div class="label">Prior eight-week support</div><div class="value" style="font-size:21px">{{SUPPORT}}</div></div>
@@ -119,6 +120,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
         "REDUCE":items(report.get("change_to_review_reduction",[])),
         "AUDIT":audit_table(),
         "CHART":chart,
+        "WEEKLY_CHART":weekly_chart,
         "PERFORMANCE":performance_table(),
         "SESSION":e(quality.get("completed_session_accepted")),
         "VERIFIED":e(quality.get("independently_verified_price")),
