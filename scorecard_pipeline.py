@@ -7,6 +7,7 @@ from downside_guard import assess
 from retrospective import replay
 from risk_event import build_event
 from session_gate import session_gate
+from completed_sessions import completed_rows
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -17,9 +18,7 @@ def main():
     result=build(price,research)
     observations=price.get("observations",[])
     # A provisional intraday bar must not suppress a valid prior completed-session warning.
-    latest_date=max((str(x.get("date",""))[:10] for x in observations),default=None)
-    latest_gate=session_gate(latest_date)
-    completed=[x for x in observations if session_gate(str(x.get("date",""))[:10])["status"]=="ACCEPTED"]
+    completed,latest_date,latest_gate=completed_rows(observations)
     downside=assess(completed)
     downside["latest_provider_session"]=latest_date
     downside["latest_provider_session_gate"]=latest_gate
