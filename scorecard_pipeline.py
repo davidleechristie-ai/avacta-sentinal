@@ -8,6 +8,7 @@ from retrospective import replay
 from risk_event import build_event
 from session_gate import session_gate
 from completed_sessions import completed_rows
+from price_bars import clean_bars
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -18,12 +19,15 @@ def main():
     result=build(price,research)
     observations=price.get("observations",[])
     # A provisional intraday bar must not suppress a valid prior completed-session warning.
-    completed,latest_date,latest_gate=completed_rows(observations)
+    clean,rejected=clean_bars(observations)
+    completed,latest_date,latest_gate=completed_rows(clean)
     downside=assess(completed)
     downside["latest_provider_session"]=latest_date
     downside["latest_provider_session_gate"]=latest_gate
     gate=session_gate(downside.get("latest_session"))
     downside["session_gate"]=gate
+    downside["rejected_price_bars"]=len(rejected)
+    downside["price_data_provenance"]="OPENBB_YFINANCE_UNVERIFIED"
     if gate["status"]!="ACCEPTED":
         downside["status"]="PRICE_SESSION_"+gate["status"]
         downside["severity"]="UNKNOWN"
