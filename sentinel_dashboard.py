@@ -18,6 +18,15 @@ def render(report, scorecard=None):
               ("Risk assessment",report.get("downside_severity","UNKNOWN")),
               ("Positioning confidence",report.get("confidence","UNKNOWN"))]
         return "".join("<tr><th scope='row'>"+e(k)+"</th><td>"+e(v)+"</td></tr>" for k,v in rows)
+    structure=scorecard.get("technical_structure") or {}
+    def structure_table():
+        events=(structure.get("events") or [])[-6:]
+        if not events:
+            return "<p>No qualifying completed-session range-break observations.</p>"
+        rows=[]
+        for event in reversed(events):
+            rows.append("<tr><td>"+e(event.get("date"))+"</td><td>"+e(event.get("kind","").replace("_"," "))+"</td><td>"+number(event.get("reference_level_pence"),"p")+"</td><td>"+e(event.get("volume_confirmation"))+"</td><td>"+e(event.get("next_session_status"))+"</td></tr>")
+        return "<div style='overflow-x:auto'><table><thead><tr><th>Session</th><th>Observation</th><th>Range level</th><th>Volume</th><th>Follow-up</th></tr></thead><tbody>"+"".join(rows)+"</tbody></table></div>"
     performance=scorecard.get("forward_signal_audit") or {}
     chart=scorecard.get("technical_chart_html") or "<p>Chart unavailable until completed-session data is processed.</p>"
     weekly_chart=scorecard.get("weekly_chart_html") or "<p>Weekly chart unavailable until sufficient completed sessions are processed.</p>"
@@ -120,6 +129,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
         "REDUCE":items(report.get("change_to_review_reduction",[])),
         "AUDIT":audit_table(),
         "CHART":chart,
+        "STRUCTURE":structure_table(),
         "WEEKLY_CHART":weekly_chart,
         "PERFORMANCE":performance_table(),
         "SESSION":e(quality.get("completed_session_accepted")),
