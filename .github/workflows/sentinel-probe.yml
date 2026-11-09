@@ -32,6 +32,8 @@ jobs:
         run: python research_pipeline.py
       - name: Assemble five-factor evidence scorecard
         if: always()
+        env:
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
         run: python scorecard_pipeline.py
       - name: Prepare read-only Pages dashboard
         if: success()
