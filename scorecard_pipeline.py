@@ -20,6 +20,7 @@ from tradermonty_pretrade import check as pretrade_check
 from isa_positioning_report import build_report, markdown as positioning_markdown
 from forward_levels import map_levels
 from sentinel_dashboard import write_dashboard
+from independent_price_verification import verify
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -33,6 +34,10 @@ def main():
     clean,rejected=clean_bars(observations)
     completed,latest_date,latest_gate=completed_rows(clean)
     downside=assess(completed)
+    # A second independently sourced feed is not configured. Record the gap
+    # explicitly rather than inferring verification from the primary provider.
+    corroboration=verify(completed,None,price.get('provider'),None)
+    (directory/'independent_price_verification.json').write_text(json.dumps(corroboration,indent=2)+'\n')
     downside["latest_provider_session"]=latest_date
     downside["latest_provider_session_gate"]=latest_gate
     gate=session_gate(downside.get("latest_session"))
@@ -46,6 +51,7 @@ def main():
         downside["warnings"].append("PRICE_SESSION_"+gate["status"])
     result["downside_guard"]=downside
     result["decision_intelligence"]=build_decision(downside, price.get("quality",{}))
+    result["decision_intelligence"]["independent_price_evidence"]=corroboration
     weekly=weekly_review(completed)
     catalysts=assess_catalysts(research,result["decision_intelligence"]["as_of"])
     result["trading_skill_overlay"]=combine(result["decision_intelligence"],weekly,catalysts)
