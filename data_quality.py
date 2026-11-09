@@ -1,6 +1,7 @@
 """Read-only market-data quality gates for AVCT.L."""
 from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
+from technical_scorecard import assess_technicals
 
 def assess_history(observations, as_of=None):
     as_of = as_of or datetime.now(timezone.utc).date()
@@ -35,14 +36,16 @@ def assess_history(observations, as_of=None):
     valid_volume = [r for r in clean if r["volume"] > 0]
     if len(valid_volume) < 10:
         flags.append({"issue": "insufficient_nonzero_volume_history", "count": len(valid_volume)})
+    technicals = assess_technicals(clean)
     return {
         "status": "REVIEW_REQUIRED" if flags else "PRELIMINARY",
         "latest": last, "observations": len(clean),
         "valid_volume_sessions": len(valid_volume),
         "flags": flags,
         "validated_for_trading": False,
-        "price_reversal": "NOT_ASSESSED",
-        "sustained_volume": "NOT_ASSESSED",
+        "price_reversal": technicals["price_reversal"],
+        "sustained_volume": technicals["sustained_volume"],
+        "technical_evidence": technicals["evidence"],
         "fca_short_exposure": "NOT_ASSESSED",
         "financing_dilution": "NOT_ASSESSED",
         "catalyst_timing": "NOT_ASSESSED"
