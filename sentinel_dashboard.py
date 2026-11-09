@@ -18,6 +18,19 @@ def render(report, scorecard=None):
               ("Risk assessment",report.get("downside_severity","UNKNOWN")),
               ("Positioning confidence",report.get("confidence","UNKNOWN"))]
         return "".join("<tr><th scope='row'>"+e(k)+"</th><td>"+e(v)+"</td></tr>" for k,v in rows)
+    performance=scorecard.get("forward_signal_audit") or {}
+    def performance_table():
+        summary=performance.get("summary") or {}
+        if not summary:
+            return "<p>No matured historical warning outcomes available.</p>"
+        rows=[]
+        for horizon in ("1","3","5","10"):
+            item=summary.get(horizon) or {}
+            count=item.get("evaluated_events",0)
+            decline=item.get("subsequent_decline_fraction")
+            mean=item.get("mean_forward_return_pct")
+            rows.append("<tr><th scope='row'>"+e(horizon)+" sessions</th><td>"+e(count)+"</td><td>"+(e(round(decline*100,1))+"%" if decline is not None else "—")+"</td><td>"+(e(mean)+"%" if mean is not None else "—")+"</td></tr>")
+        return "<table><thead><tr><th>Horizon</th><th>Events</th><th>Declined</th><th>Mean return</th></tr></thead><tbody>"+"".join(rows)+"</tbody></table>"
     catalyst=report.get("next_catalyst")
     scenarios=report.get("scenario_matrix") or {}
     events=report.get("event_positioning_rules") or {}
@@ -77,6 +90,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
 <div class="two section">
 <section class="card"><h2>Evidence required before considering an add</h2><ul>{{ADD}}</ul></section>
 <section class="card"><h2>Evidence prompting a reduction review</h2><ul>{{REDUCE}}</ul></section></div>
+<section class="card section"><h2>Historical warning outcomes</h2><p>Observed completed-session returns following new downside escalations. This is not a backtested trading strategy, execution result, or evidence of predictive accuracy.</p>{{PERFORMANCE}}<small>Small samples, overlapping signals, corporate actions, spreads and execution costs may distort comparisons. A holding benchmark and live decision journal are not yet available.</small></section>
 <section class="card section"><h2>Evidence audit</h2><p>Verification and confidence are displayed separately from the decision hypothesis.</p><table>{{AUDIT}}</table></section>
 <section class="card section"><h2>Safety & provenance</h2>
 <ul><li>Completed-session accepted: {{SESSION}}</li><li>Independent price verification: {{VERIFIED}}</li><li>Pre-trade gate: {{PRETRADE}}</li><li>Catalyst outcomes verified: {{CATALYST_VERIFIED}}</li><li>All positions and order approvals remain outside this public workflow.</li></ul></section>
@@ -102,6 +116,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
         "ADD":items(report.get("change_to_consider_add",[])),
         "REDUCE":items(report.get("change_to_review_reduction",[])),
         "AUDIT":audit_table(),
+        "PERFORMANCE":performance_table(),
         "SESSION":e(quality.get("completed_session_accepted")),
         "VERIFIED":e(quality.get("independently_verified_price")),
         "PRETRADE":e(report.get("pretrade_gate")),
