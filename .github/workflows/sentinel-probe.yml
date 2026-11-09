@@ -41,5 +41,8 @@ jobs:
             artifacts/forward_signal_audit.json
             artifacts/signal_baseline.json
             artifacts/tradermonty_technical_review.json
+            artifacts/tradermonty_weekly.json
+            artifacts/tradermonty_catalysts.json
+            artifacts/tradermonty_pretrade.json
             artifacts/risk_event.json
           if-no-files-found: warn
