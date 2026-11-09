@@ -50,3 +50,15 @@ class DashboardTests(unittest.TestCase):
         html=render(self.report(),scorecard)
         self.assertIn("&lt;script&gt;",html)
         self.assertNotIn("<script>",html)
+
+    def test_historical_outcomes_render_without_strategy_claims(self):
+        scorecard={"forward_signal_audit":{"summary":{
+            "1":{"evaluated_events":2,"subsequent_decline_fraction":0.5,"mean_forward_return_pct":-1.25},
+            "3":{"evaluated_events":0,"subsequent_decline_fraction":None,"mean_forward_return_pct":None}}}}
+        html=render(self.report(),scorecard)
+        self.assertIn("Historical warning outcomes",html)
+        self.assertIn("50.0%",html)
+        self.assertIn("-1.25%",html)
+        self.assertIn("not a backtested trading strategy",html)
+    def test_no_matured_warning_outcomes(self):
+        self.assertIn("No matured historical warning outcomes",render(self.report()))
