@@ -88,6 +88,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
 <div class="card"><div class="label">Relative weekly volume</div><div class="value">{{VOLUME}}</div><small>Historical comparison</small></div></div>
 <div class="warning"><strong>Data-quality gate:</strong> {{QUALITY}}. No executable entry permission is granted by this dashboard.</div>
 <section class="card section"><h2>Annotated price and volume</h2><p>Completed-session closing prices, observed historical levels and volume. Prices remain independently unverified.</p>{{CHART}}<h3 style="margin-top:24px">Weekly trend · up to 26 trading weeks</h3><p>Weekly closing prices and summed volume. The latest week may be incomplete; annotations remain historical and unverified.</p>{{WEEKLY_CHART}}</section>
+<section class="card section"><h2>Breakout and breakdown evidence</h2><p>Close-only breaks of the preceding ten-session range; volume support requires at least 1.5× the preceding ten-session median. Next-session follow-up is only assessed once completed. Observational and unverified.</p>{{STRUCTURE}}</section>
 <div class="two section">
 <section class="card"><h2>Technical map</h2><div class="kv">
 <div><div class="label">Prior eight-week support</div><div class="value" style="font-size:21px">{{SUPPORT}}</div></div>
