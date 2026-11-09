@@ -30,7 +30,10 @@ def build(report, scorecard):
     view=("WATCH FOR EVENT-DRIVEN MISPRICING; NO VERIFIED EDGE YET" if not verified else
           "ASSESS EVENT ASYMMETRY AGAINST EXECUTABLE PRICE AND LIQUIDITY")
     if broken: view="BROKEN-SUPPORT OVERHANG VS CATALYST REPRICING — EDGE UNPROVEN"
-    return {"view":view,"thesis":thesis,"mechanisms":mechanisms,"catalyst":event,"horizon":position,
+    missing_factors=[name.replace("_"," ") for name in ("price_reversal","sustained_volume","fca_short_exposure","financing_dilution","catalyst_timing") if (factors.get(name) or {}).get("status") not in ("VERIFIED","CONFIRMED","MATCHED")]
+    if not factors:
+        missing_factors=["Five-factor scorecard not supplied to thesis engine"]
+    return {"missing_factors":missing_factors,"view":view,"thesis":thesis,"mechanisms":mechanisms,"catalyst":event,"horizon":position,
       "discriminators":"Verify independent OHLCV and bid/ask; compare dated short disclosures; inspect issuer financing terms and cash runway; quantify what the event changes versus prior guidance.",
       "decision":"Do not add solely because price is down, and do not automatically sell solely because support broke. Evaluate exposure against event-gap risk, remaining ISA horizon and a verified alternative explanation for price weakness.",
       "confidence":"LOW — independent market data missing" if not verified else "CONDITIONAL — source checks still required",
