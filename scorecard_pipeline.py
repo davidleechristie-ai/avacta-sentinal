@@ -19,6 +19,7 @@ from tradermonty_catalyst_overlay import assess_catalysts, combine
 from tradermonty_pretrade import check as pretrade_check
 from isa_positioning_report import build_report, markdown as positioning_markdown
 from forward_levels import map_levels
+from sentinel_dashboard import write_dashboard
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -55,6 +56,7 @@ def main():
     (directory/"forward_levels.json").write_text(json.dumps(levels,indent=2)+"\n")
     (directory/"isa_positioning_report.json").write_text(json.dumps(positioning,indent=2)+"\n")
     (directory/"isa_positioning_report.md").write_text(positioning_markdown(positioning))
+    write_dashboard(positioning,directory/"sentinel_dashboard.html")
     (directory/"tradermonty_weekly.json").write_text(json.dumps(weekly,indent=2)+"\n")
     (directory/"tradermonty_catalysts.json").write_text(json.dumps(catalysts,indent=2)+"\n")
     (directory/"tradermonty_pretrade.json").write_text(json.dumps(result["manual_pretrade_gate"],indent=2)+"\n")
@@ -78,5 +80,8 @@ def main():
             out.write("**Signals:** "+(", ".join(downside["warnings"]) or "None confirmed")+"\n\n")
             out.write("**Decision hypothesis:** "+result["decision_intelligence"]["decision"]+"\n\n")
             out.write("**Source:** TraderMonty methodology; weekly chart review not performed automatically.\n\n")
+            out.write("**ISA positioning:** "+positioning["stance"]+"\n\n")
+            out.write("**Price verification:** "+str(positioning["data_quality"]["independently_verified_price"])+"\n\n")
+            out.write("Download sentinel_dashboard.html from the run artifacts for the decision brief.\n\n")
             out.write("Research warning only; not an automated trade instruction.\n")
 if __name__=="__main__":main()
