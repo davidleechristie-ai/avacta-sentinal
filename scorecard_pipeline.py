@@ -20,6 +20,7 @@ from tradermonty_pretrade import check as pretrade_check
 from isa_positioning_report import build_report, markdown as positioning_markdown
 from forward_levels import map_levels
 from sentinel_dashboard import write_dashboard
+from technical_chart import render_chart
 from independent_price_verification import verify
 from secondary_price_feed import fetch_secondary, SecondaryFeedUnavailable
 def main():
@@ -81,6 +82,7 @@ def main():
     (directory/"isa_positioning_report.md").write_text(positioning_markdown(positioning))
     performance=audit(completed)
     result["forward_signal_audit"]=performance
+    result["technical_chart_html"]=render_chart(completed,levels)
     write_dashboard(positioning,directory/"sentinel_dashboard.html",result)
     (directory/"tradermonty_weekly.json").write_text(json.dumps(weekly,indent=2)+"\n")
     (directory/"tradermonty_catalysts.json").write_text(json.dumps(catalysts,indent=2)+"\n")
