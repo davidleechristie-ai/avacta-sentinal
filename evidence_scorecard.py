@@ -2,6 +2,7 @@
 from datetime import date,datetime
 from decimal import Decimal,InvalidOperation
 import re
+from fca_trends import trend as fca_trend
 WEIGHTS={"price_reversal":25,"sustained_volume":20,"fca_short_exposure":15,"financing_dilution":20,"catalyst_timing":20}
 def _date(value):
     try:return date.fromisoformat(str(value)[:10])
@@ -47,7 +48,7 @@ def build(price,research,as_of=None):
     details={
         "price_reversal":{"status":quality.get("price_reversal","UNKNOWN"),"source":"OpenBB/Yahoo Finance"},
         "sustained_volume":{"status":quality.get("sustained_volume","UNKNOWN"),"source":"OpenBB/Yahoo Finance"},
-        "fca_short_exposure":short_exposure(sources),
+        "fca_short_exposure":{**short_exposure(sources), "dated_trend":fca_trend(sources)},
         "financing_dilution":financing(sources),
         "catalyst_timing":catalyst(sources,research.get("research",{}),as_of=as_of)}
     return {"status":"EVIDENCE_REVIEW_REQUIRED","weights":WEIGHTS,"factors":details,
