@@ -19,3 +19,12 @@ class FcaTrendTests(unittest.TestCase):
         self.assertEqual(parse([{"Date":"2026-11-06","Position":"1.11","Aggregate":"2.22"}]),[])
     def test_uk_date(self):
         self.assertEqual(parse([{"Position Date":"06/11/2026","Net Position":"1.11%"}])[0]["date"],"2026-11-06")
+
+    def test_historic_classification_date_ignored(self):
+        result=trend(sources(
+            [{"Position Date":"26/10/2026","Net Position":"1.11%"}],
+            [{"Position Date":"15/09/2026","Historical Date":"12/10/2026","Net Position":"0.80%"}]))
+        self.assertEqual(result["direction"],"RISING")
+        self.assertEqual(result["previous"]["date"],"2026-09-15")
+    def test_two_unrelated_dates_without_position_date_rejected(self):
+        self.assertEqual(parse([{"Report Date":"2026-11-01","Historical Date":"2026-11-05","Net Position":"1.0"}]),[])
