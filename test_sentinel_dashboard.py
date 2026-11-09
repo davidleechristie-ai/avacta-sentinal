@@ -74,3 +74,9 @@ class DashboardTests(unittest.TestCase):
     def test_chart_unavailable_message_is_visible(self):
         html=render(self.report())
         self.assertIn("Chart unavailable until completed-session data is processed",html)
+
+    def test_weekly_chart_is_in_rendered_page(self):
+        html=render(self.report(),{"weekly_chart_html":'<svg id="weekly-observations"></svg>'})
+        self.assertIn("Weekly trend",html)
+        self.assertIn('id="weekly-observations"',html)
+        self.assertNotIn("{{WEEKLY_CHART}}",html)
