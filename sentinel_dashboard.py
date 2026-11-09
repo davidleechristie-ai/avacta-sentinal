@@ -65,6 +65,24 @@ def render(report, scorecard=None):
     stance=report.get("stance","UNKNOWN")
     severity=report.get("downside_severity","UNKNOWN")
     quality_note="Independent price verification outstanding" if not quality.get("independently_verified_price") else "Price source flagged verified by upstream process; verify its provenance"
+    verified=bool(quality.get("independently_verified_price"))
+    risk_flags=report.get("downside_flags") or report.get("risk_flags") or []
+    if severity=="CRITICAL":
+        steer="DEFENSIVE — PRIORITISE CAPITAL PROTECTION"
+        why="Downside structure is deteriorating; avoid treating an unverified rebound as a confirmed reversal."
+        change="Reassess after a verified higher low, resistance reclaim and sustained supporting volume."
+    elif severity in ("HIGH","ELEVATED"):
+        steer="CAUTIOUS — WAIT FOR CONFIRMATION"
+        why="Downside risk remains elevated; preserve flexibility ahead of the exit deadline."
+        change="Reassess on verified price stabilisation and improving volume and catalyst evidence."
+    else:
+        steer="HOLD FOR EVIDENCE — NO AUTOMATIC TRADE"
+        why="Current evidence does not justify an automatic change to ISA exposure."
+        change="Reassess on independently verified price, volume, short-interest and catalyst developments."
+    if not verified:
+        steer=steer+" · DATA UNVERIFIED"
+    evidence="; ".join(str(x).replace("_"," ").lower() for x in risk_flags[:3]) if risk_flags else str(report.get("rationale") or "Price structure and downside severity require review.")
+    next_event=(str(catalyst.get("id"))+" in "+str(catalyst.get("days_until_start"))+" days") if catalyst and catalyst.get("days_until_start") is not None else "No confirmed near-term catalyst window"
     html="""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Avacta Sentinel | ISA decision brief</title><style>
 :root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;background:#0b1220;color:#e8eef7}
@@ -73,7 +91,7 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px;fl
 .brand{font-weight:800;letter-spacing:.1em;color:#a5c8ed;font-size:13px}.meta{color:#aebed1;font-size:13px}
 h1{font-size:clamp(27px,4vw,43px);margin:10px 0}h2{font-size:18px;margin:0 0 16px}h3{font-size:15px;margin:0 0 8px}
 p{line-height:1.55;color:#cbd6e4}small,.subtle{color:#aebed1;line-height:1.5}
-.hero{background:linear-gradient(130deg,#15273c,#111c2c);border:1px solid #35465a;border-radius:18px;padding:28px;margin:24px 0}
+.decision-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}.decision-item{border:1px solid #35465a;border-radius:12px;padding:14px;background:#101e30}.decision-item h3{color:#a5c8ed;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.decision-item p{margin:8px 0 0}.hero{background:linear-gradient(130deg,#15273c,#111c2c);border:1px solid #35465a;border-radius:18px;padding:28px;margin:24px 0}
 .eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#aebed1}.stance{font-size:clamp(20px,3vw,30px);font-weight:750;margin:12px 0;overflow-wrap:anywhere}
 .pill{display:inline-block;border:1px solid #986945;background:#422d23;color:#ffd1aa;border-radius:20px;padding:6px 11px;font-size:12px;font-weight:700}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -84,12 +102,12 @@ ul{margin:10px 0 0;padding-left:19px}li{margin:9px 0;color:#d0dae7;line-height:1
 .warning{border-left:4px solid #e5a25c;padding:14px 18px;background:#30271f;color:#ffdbb9;margin:20px 0}
 table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px 8px;border-bottom:1px solid #2c394b;font-size:14px}th{color:#aebed1;font-weight:500;width:43%}.footer{margin-top:30px;border-top:1px solid #2c394b;padding-top:20px;color:#aebed1;font-size:12px}
 a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:760px){.grid,.two{grid-template-columns:1fr 1fr}.kv{grid-template-columns:1fr}}
+@media(max-width:760px){.decision-list{grid-template-columns:1fr}.grid,.two{grid-template-columns:1fr 1fr}.kv{grid-template-columns:1fr}}
 @media(max-width:460px){.grid,.two{grid-template-columns:1fr}main{padding:18px 14px 50px}.hero{padding:20px}}
 @media print{:root{color-scheme:light;background:white;color:#17202d}body{background:white}.card,.scenario,.hero{background:white;color:#17202d;border-color:#aaa}p,li,small,.subtle,.label{color:#344}a{color:#135b8a}.warning{background:#fff4e8;color:#653c13}}
 </style></head><body><main>
 <header><div><div class="brand">AVACTA SENTINEL / DECISION INTELLIGENCE</div><h1>ISA positioning brief</h1></div><div class="meta">AVCT.L · Research only<br>As of {{DATE}}</div></header>
-<section class="hero"><div class="eyebrow">Current decision hypothesis</div><div class="stance">{{STANCE}}</div><span class="pill">{{SEVERITY}} downside risk</span><p>{{RATIONALE}}</p><div class="subtle">Owner approval required · No automatic trades · Short-term ISA only</div></section>
+<section class="hero"><div class="eyebrow">Sentinel decision brief · Short-term ISA</div><div class="stance">{{STEER}}</div><span class="pill">{{SEVERITY}} downside risk</span><div class="decision-list"><div class="decision-item"><h3>Why this steer</h3><p>{{WHY}}</p></div><div class="decision-item"><h3>Evidence observed</h3><p>{{EVIDENCE}}</p></div><div class="decision-item"><h3>What changes the view</h3><p>{{CHANGE}}</p></div></div><p><strong>Next catalyst:</strong> {{NEXT_EVENT}} · <strong>ISA exit:</strong> {{DEADLINE}}</p><div class="subtle">Research steer only · Independent price verification {{VERIFY_STATUS}} · Owner approval required · No automatic trades · Long-term SIPP excluded</div></section>
 <div class="grid">
 <div class="card"><div class="label">Observed completed close</div><div class="value">{{CLOSE}}</div><small>Unverified feed; not a live quote</small></div>
 <div class="card"><div class="label">Days until ISA exit</div><div class="value">{{DAYS}}</div><small>Deadline {{DEADLINE}}</small></div>
@@ -125,6 +143,8 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
     rule_html="<ul>"+items([key.replace("_"," ").title()+": "+val for key,val in events.items()])+"</ul>"
     substitutions={
         "DATE":e(report.get("as_of")),"STANCE":e(stance.replace("_"," ")),"SEVERITY":e(severity),
+        "STEER":e(steer),"WHY":e(why),"EVIDENCE":e(evidence),"CHANGE":e(change),
+        "NEXT_EVENT":e(next_event),"VERIFY_STATUS":e("confirmed" if verified else "outstanding"),
         "RATIONALE":e(report.get("rationale")),"CLOSE":number(report.get("observed_close_pence"),"p"),
         "DAYS":e(report.get("days_to_exit")),"DEADLINE":e(report.get("isa_exit_deadline")),
         "TREND":e(str(report.get("weekly_trend","UNKNOWN")).replace("_"," ")),
