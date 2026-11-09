@@ -79,7 +79,9 @@ def main():
     (directory/"forward_levels.json").write_text(json.dumps(levels,indent=2)+"\n")
     (directory/"isa_positioning_report.json").write_text(json.dumps(positioning,indent=2)+"\n")
     (directory/"isa_positioning_report.md").write_text(positioning_markdown(positioning))
-    write_dashboard(positioning,directory/"sentinel_dashboard.html")
+    performance=audit(completed)
+    result["forward_signal_audit"]=performance
+    write_dashboard(positioning,directory/"sentinel_dashboard.html",result)
     (directory/"tradermonty_weekly.json").write_text(json.dumps(weekly,indent=2)+"\n")
     (directory/"tradermonty_catalysts.json").write_text(json.dumps(catalysts,indent=2)+"\n")
     (directory/"tradermonty_pretrade.json").write_text(json.dumps(result["manual_pretrade_gate"],indent=2)+"\n")
