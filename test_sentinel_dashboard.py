@@ -35,3 +35,18 @@ class DashboardTests(unittest.TestCase):
         html=render(r)
         self.assertIn("No upcoming registry event",html)
         self.assertIn("No historical level established",html)
+
+    def test_evidence_audit_renders_live_data(self):
+        scorecard={"decision_intelligence":{"independent_price_evidence":{
+            "status":"NOT_VERIFIED","independent_providers":0,
+            "reason":"No second provider configured"}}}
+        html=render(self.report(),scorecard)
+        self.assertIn("Evidence audit",html)
+        self.assertIn("No second provider configured",html)
+        self.assertIn("NOT_VERIFIED",html)
+    def test_evidence_audit_escapes_untrusted_reason(self):
+        scorecard={"decision_intelligence":{"independent_price_evidence":{
+            "reason":"<script>alert(1)</script>"}}}
+        html=render(self.report(),scorecard)
+        self.assertIn("&lt;script&gt;",html)
+        self.assertNotIn("<script>",html)
