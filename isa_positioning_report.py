@@ -12,7 +12,7 @@ def build_report(decision, weekly, catalysts, overlay, pretrade, downside, level
     days=(date.fromisoformat(deadline)-date.fromisoformat(as_of)).days
     severity=downside.get("severity","UNKNOWN")
     pattern=weekly.get("weekly_trend_pattern","INSUFFICIENT_DATA")
-    source_verified=decision.get("price_source_status") not in ("UNKNOWN","OPENBB_YFINANCE_UNVERIFIED")
+    source_verified=(decision.get("price_source_status")=="INDEPENDENTLY_VERIFIED" and decision.get("independent_price_evidence",{}).get("status")=="MATCHED" and decision.get("independent_price_evidence",{}).get("independent_providers",0)>=2)
     gate=decision.get("price_session_gate")=="ACCEPTED"
     events=[e for e in catalysts.get("catalysts",[]) if e.get("status") in ("UPCOMING","IN_WINDOW") and e.get("within_isa_horizon")]
     events.sort(key=lambda e:e["days_until_start"])
