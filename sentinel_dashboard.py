@@ -2,6 +2,7 @@
 from html import escape
 from pathlib import Path
 from math import isfinite
+from market_thesis import build as build_market_thesis
 
 def render(report, scorecard=None):
     scorecard=scorecard or {}
@@ -66,66 +67,13 @@ def render(report, scorecard=None):
     severity=report.get("downside_severity","UNKNOWN")
     quality_note="Independent price verification outstanding" if not quality.get("independently_verified_price") else "Price source flagged verified by upstream process; verify its provenance"
     verified=bool(quality.get("independently_verified_price"))
-    close=report.get("observed_close_pence")
-    support=report.get("weekly_support_pence")
-    resistance=report.get("weekly_resistance_pence")
-    relative_volume=report.get("weekly_relative_volume")
-    trend=report.get("weekly_trend","UNKNOWN")
-    days=report.get("days_to_exit")
-    def valid_price(v):
-        try:
-            x=float(v)
-            return x if isfinite(x) and x>0 else None
-        except (TypeError,ValueError):
-            return None
-    close,support,resistance=map(valid_price,(close,support,resistance))
-    vol=valid_price(relative_volume)
-    events_seen=(structure.get("events") or [])
-    last_event=events_seen[-1] if events_seen else None
-    last_breakdown=last_event and last_event.get("kind")=="CLOSE_BELOW_PRIOR_RANGE"
-    last_breakout=last_event and last_event.get("kind")=="CLOSE_ABOVE_PRIOR_RANGE"
-    catalyst_days=catalyst.get("days_until_start") if catalyst else None
-    near_catalyst=isinstance(catalyst_days,(int,float)) and 0<=catalyst_days<=21
-    if close is not None and support is not None and close<support:
-        displacement=(support/close-1)*100
-        steer="BROKEN SUPPORT: TEST SELLER EXHAUSTION, NOT JUST PRICE DIRECTION"
-        why=("The observed close is "+number(close,"p")+" versus former weekly support at "+number(support,"p")+
-             " ("+f"{displacement:.1f}"+"% below). That level may now act as supply on a rebound. "
-             "A rally into it can be a liquidity-driven retest rather than a durable trend change.")
-        change=("Track whether a rebound fails beneath "+number(support,"p")+" on weakening participation, "
-                "or instead absorbs selling and holds above that level. Neither outcome alone proves institutional accumulation.")
-    elif last_breakout:
-        steer="RANGE BREAKOUT: TEST ACCEPTANCE AND BUYER QUALITY"
-        why="The latest detected close exceeded its preceding ten-session range. A breakout can be momentum chasing or genuine repricing; volume and next-session acceptance distinguish the cases."
-        change="Check whether the broken ceiling holds on the first retest, with reduced selling volume and subsequent follow-through."
-    elif last_breakdown:
-        steer="RANGE BREAKDOWN: DISTINGUISH DISTRIBUTION FROM LIQUIDITY FLUSH"
-        why="The latest detected close broke its prior ten-session range. A quick reclaim would weaken the breakdown thesis; repeated failed reclaims would strengthen it."
-        change="Compare the next completed-session close with the broken range floor and inspect volume on the recovery."
-    else:
-        steer="NO PROVEN EDGE: MAP CATALYST AND LIQUIDITY ASYMMETRY"
-        why="Current observations do not distinguish informed accumulation from ordinary positioning. Price direction alone is not an actionable edge."
-        change="Look for an independently verified range break, follow-through and a catalyst outcome that differs from market expectations."
-    if vol is not None and vol>=1.5:
-        why+=(" Relative weekly volume is "+number(vol,"×")+
-              ", indicating unusually high participation, but not whether the net driver is selling, short covering or accumulation.")
-    if near_catalyst:
-        why+=(" "+str(catalyst.get("id"))+" is scheduled in "+str(int(catalyst_days))+
-              " days: positioning ahead of the event can produce a sharp move without any new clinical evidence.")
-        change+=" Assess what the announcement adds beyond already-disclosed science; expect potential gap and spread risk."
-    if days is not None and days<=21:
-        change+=" The approaching ISA exit deadline may override an otherwise attractive setup."
-    if not verified:
-        why+=" The current feed is not independently corroborated, so these are provisional observations rather than confirmed market facts."
-    evidence=("Latest range event: "+str(last_event.get("kind","")).replace("_"," ").lower()+
-              "; volume "+str(last_event.get("volume_confirmation","unknown")).lower()+
-              "; next session "+str(last_event.get("next_session_status","unknown")).lower()+".") if last_event else "No qualifying recent ten-session range break is established."
-    if trend not in ("UNKNOWN","INSUFFICIENT_DATA"):
-        evidence+=" Weekly structure: "+str(trend).replace("_"," ").lower()+"."
-    evidence+=" Short covering, order-book absorption and seller identity cannot be inferred from closing prices or aggregate volume."
-    if not verified:
-        steer+=" · UNVERIFIED DATA"
-    next_event=(str(catalyst.get("id"))+" in "+str(catalyst.get("days_until_start"))+" days") if catalyst and catalyst.get("days_until_start") is not None else "No confirmed near-term catalyst window"
+    thesis=build_market_thesis(report,scorecard)
+    steer=thesis["view"]
+    why=thesis["thesis"]+" "+thesis["decision"]
+    evidence=thesis["catalyst"]+" "+thesis["horizon"]
+    change=thesis["discriminators"]
+    next_event=thesis["confidence"]
+    mechanism_html="<section class='card section'><h2>Competing market explanations — what would distinguish them?</h2>"+ "".join("<h3>"+e(m["name"])+"</h3><p><strong>Current interpretation:</strong> "+e(m["evidence"])+"</p><p><strong>Critical missing evidence:</strong> "+e(m["missing"])+"</p><p><strong>Discriminating test:</strong> "+e(m["test"])+"</p>" for m in thesis["mechanisms"])+"<small>"+e(thesis["limitations"])+"</small></section>"
     html="""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Avacta Sentinel | ISA decision brief</title><style>
 :root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;background:#0b1220;color:#e8eef7}
@@ -151,6 +99,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
 </style></head><body><main>
 <header><div><div class="brand">AVACTA SENTINEL / DECISION INTELLIGENCE</div><h1>ISA positioning brief</h1></div><div class="meta">AVCT.L · Research only<br>As of {{DATE}}</div></header>
 <section class="hero"><div class="eyebrow">Sentinel decision brief · Short-term ISA</div><div class="stance">{{STEER}}</div><span class="pill">{{SEVERITY}} downside risk</span><div class="decision-list"><div class="decision-item"><h3>Why this steer</h3><p>{{WHY}}</p></div><div class="decision-item"><h3>Evidence observed</h3><p>{{EVIDENCE}}</p></div><div class="decision-item"><h3>What changes the view</h3><p>{{CHANGE}}</p></div></div><p><strong>Next catalyst:</strong> {{NEXT_EVENT}} · <strong>ISA exit:</strong> {{DEADLINE}}</p><div class="subtle">Research steer only · Independent price verification {{VERIFY_STATUS}} · Owner approval required · No automatic trades · Long-term SIPP excluded</div></section>
+{{MECHANISMS}}
 <div class="grid">
 <div class="card"><div class="label">Observed completed close</div><div class="value">{{CLOSE}}</div><small>Unverified feed; not a live quote</small></div>
 <div class="card"><div class="label">Days until ISA exit</div><div class="value">{{DAYS}}</div><small>Deadline {{DEADLINE}}</small></div>
@@ -188,6 +137,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
         "DATE":e(report.get("as_of")),"STANCE":e(stance.replace("_"," ")),"SEVERITY":e(severity),
         "STEER":e(steer),"WHY":e(why),"EVIDENCE":e(evidence),"CHANGE":e(change),
         "NEXT_EVENT":e(next_event),"VERIFY_STATUS":e("confirmed" if verified else "outstanding"),
+        "MECHANISMS":mechanism_html,
         "RATIONALE":e(report.get("rationale")),"CLOSE":number(report.get("observed_close_pence"),"p"),
         "DAYS":e(report.get("days_to_exit")),"DEADLINE":e(report.get("isa_exit_deadline")),
         "TREND":e(str(report.get("weekly_trend","UNKNOWN")).replace("_"," ")),
