@@ -21,6 +21,7 @@ from isa_positioning_report import build_report, markdown as positioning_markdow
 from forward_levels import map_levels
 from sentinel_dashboard import write_dashboard
 from technical_chart import render_chart, weekly_bars
+from technical_structure import assess_structure
 from independent_price_verification import verify
 from secondary_price_feed import fetch_secondary, SecondaryFeedUnavailable
 def main():
@@ -82,6 +83,8 @@ def main():
     (directory/"isa_positioning_report.md").write_text(positioning_markdown(positioning))
     performance=audit(completed)
     result["forward_signal_audit"]=performance
+    result["technical_structure"]=assess_structure(completed)
+    (directory/"technical_structure.json").write_text(json.dumps(result["technical_structure"],indent=2)+"\\n")
     result["technical_chart_html"]=render_chart(completed,levels)
     result["weekly_chart_html"]=render_chart(weekly_bars(completed),levels,limit=26)
     write_dashboard(positioning,directory/"sentinel_dashboard.html",result)
