@@ -17,7 +17,7 @@ def render(report, scorecard=None):
               ("Verification reason",audit.get("reason","Not supplied")),
               ("Risk assessment",report.get("downside_severity","UNKNOWN")),
               ("Positioning confidence",report.get("confidence","UNKNOWN"))]
-        return "".join("<tr><th scope=\\"row\\">"+e(k)+"</th><td>"+e(v)+"</td></tr>" for k,v in rows)
+        return "".join("<tr><th scope='row'>"+e(k)+"</th><td>"+e(v)+"</td></tr>" for k,v in rows)
     catalyst=report.get("next_catalyst")
     scenarios=report.get("scenario_matrix") or {}
     events=report.get("event_positioning_rules") or {}
