@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install real OpenBB SDK
-        run: python -m pip install --disable-pip-version-check "openbb==4.7.3" "openbb-yfinance<2" pandas
+        run: python -m pip install --disable-pip-version-check "openbb==4.7.2" "openbb-yfinance==1.6.3" pandas
       - name: Build OpenBB v4 router interface
         run: openbb-build
       - name: Validate probe
