@@ -66,22 +66,65 @@ def render(report, scorecard=None):
     severity=report.get("downside_severity","UNKNOWN")
     quality_note="Independent price verification outstanding" if not quality.get("independently_verified_price") else "Price source flagged verified by upstream process; verify its provenance"
     verified=bool(quality.get("independently_verified_price"))
-    risk_flags=report.get("downside_flags") or report.get("risk_flags") or []
-    if severity=="CRITICAL":
-        steer="DEFENSIVE — PRIORITISE CAPITAL PROTECTION"
-        why="Downside structure is deteriorating; avoid treating an unverified rebound as a confirmed reversal."
-        change="Reassess after a verified higher low, resistance reclaim and sustained supporting volume."
-    elif severity in ("HIGH","ELEVATED"):
-        steer="CAUTIOUS — WAIT FOR CONFIRMATION"
-        why="Downside risk remains elevated; preserve flexibility ahead of the exit deadline."
-        change="Reassess on verified price stabilisation and improving volume and catalyst evidence."
+    close=report.get("observed_close_pence")
+    support=report.get("weekly_support_pence")
+    resistance=report.get("weekly_resistance_pence")
+    relative_volume=report.get("weekly_relative_volume")
+    trend=report.get("weekly_trend","UNKNOWN")
+    days=report.get("days_to_exit")
+    def valid_price(v):
+        try:
+            x=float(v)
+            return x if isfinite(x) and x>0 else None
+        except (TypeError,ValueError):
+            return None
+    close,support,resistance=map(valid_price,(close,support,resistance))
+    vol=valid_price(relative_volume)
+    events_seen=(structure.get("events") or [])
+    last_event=events_seen[-1] if events_seen else None
+    last_breakdown=last_event and last_event.get("kind")=="CLOSE_BELOW_PRIOR_RANGE"
+    last_breakout=last_event and last_event.get("kind")=="CLOSE_ABOVE_PRIOR_RANGE"
+    catalyst_days=catalyst.get("days_until_start") if catalyst else None
+    near_catalyst=isinstance(catalyst_days,(int,float)) and 0<=catalyst_days<=21
+    if close is not None and support is not None and close<support:
+        displacement=(support/close-1)*100
+        steer="BROKEN SUPPORT: TEST SELLER EXHAUSTION, NOT JUST PRICE DIRECTION"
+        why=("The observed close is "+number(close,"p")+" versus former weekly support at "+number(support,"p")+
+             " ("+f"{displacement:.1f}"+"% below). That level may now act as supply on a rebound. "
+             "A rally into it can be a liquidity-driven retest rather than a durable trend change.")
+        change=("Track whether a rebound fails beneath "+number(support,"p")+" on weakening participation, "
+                "or instead absorbs selling and holds above that level. Neither outcome alone proves institutional accumulation.")
+    elif last_breakout:
+        steer="RANGE BREAKOUT: TEST ACCEPTANCE AND BUYER QUALITY"
+        why="The latest detected close exceeded its preceding ten-session range. A breakout can be momentum chasing or genuine repricing; volume and next-session acceptance distinguish the cases."
+        change="Check whether the broken ceiling holds on the first retest, with reduced selling volume and subsequent follow-through."
+    elif last_breakdown:
+        steer="RANGE BREAKDOWN: DISTINGUISH DISTRIBUTION FROM LIQUIDITY FLUSH"
+        why="The latest detected close broke its prior ten-session range. A quick reclaim would weaken the breakdown thesis; repeated failed reclaims would strengthen it."
+        change="Compare the next completed-session close with the broken range floor and inspect volume on the recovery."
     else:
-        steer="HOLD FOR EVIDENCE — NO AUTOMATIC TRADE"
-        why="Current evidence does not justify an automatic change to ISA exposure."
-        change="Reassess on independently verified price, volume, short-interest and catalyst developments."
+        steer="NO PROVEN EDGE: MAP CATALYST AND LIQUIDITY ASYMMETRY"
+        why="Current observations do not distinguish informed accumulation from ordinary positioning. Price direction alone is not an actionable edge."
+        change="Look for an independently verified range break, follow-through and a catalyst outcome that differs from market expectations."
+    if vol is not None and vol>=1.5:
+        why+=(" Relative weekly volume is "+number(vol,"×")+
+              ", indicating unusually high participation, but not whether the net driver is selling, short covering or accumulation.")
+    if near_catalyst:
+        why+=(" "+str(catalyst.get("id"))+" is scheduled in "+str(int(catalyst_days))+
+              " days: positioning ahead of the event can produce a sharp move without any new clinical evidence.")
+        change+=" Assess what the announcement adds beyond already-disclosed science; expect potential gap and spread risk."
+    if days is not None and days<=21:
+        change+=" The approaching ISA exit deadline may override an otherwise attractive setup."
     if not verified:
-        steer=steer+" · DATA UNVERIFIED"
-    evidence="; ".join(str(x).replace("_"," ").lower() for x in risk_flags[:3]) if risk_flags else str(report.get("rationale") or "Price structure and downside severity require review.")
+        why+=" The current feed is not independently corroborated, so these are provisional observations rather than confirmed market facts."
+    evidence=("Latest range event: "+str(last_event.get("kind","")).replace("_"," ").lower()+
+              "; volume "+str(last_event.get("volume_confirmation","unknown")).lower()+
+              "; next session "+str(last_event.get("next_session_status","unknown")).lower()+".") if last_event else "No qualifying recent ten-session range break is established."
+    if trend not in ("UNKNOWN","INSUFFICIENT_DATA"):
+        evidence+=" Weekly structure: "+str(trend).replace("_"," ").lower()+"."
+    evidence+=" Short covering, order-book absorption and seller identity cannot be inferred from closing prices or aggregate volume."
+    if not verified:
+        steer+=" · UNVERIFIED DATA"
     next_event=(str(catalyst.get("id"))+" in "+str(catalyst.get("days_until_start"))+" days") if catalyst and catalyst.get("days_until_start") is not None else "No confirmed near-term catalyst window"
     html="""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Avacta Sentinel | ISA decision brief</title><style>
