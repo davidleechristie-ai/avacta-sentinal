@@ -80,3 +80,13 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("Weekly trend",html)
         self.assertIn('id="weekly-observations"',html)
         self.assertNotIn("{{WEEKLY_CHART}}",html)
+
+    def test_breakout_evidence_is_embedded_in_page(self):
+        scorecard={"technical_structure":{"events":[{"date":"2026-11-09",
+            "kind":"CLOSE_ABOVE_PRIOR_RANGE","reference_level_pence":55,
+            "volume_confirmation":"SUPPORTED","next_session_status":"PENDING"}]}}
+        html=render(self.report(),scorecard)
+        self.assertIn("Breakout and breakdown evidence",html)
+        self.assertIn("CLOSE ABOVE PRIOR RANGE",html)
+        self.assertIn("55p",html)
+        self.assertNotIn("{{STRUCTURE}}",html)
