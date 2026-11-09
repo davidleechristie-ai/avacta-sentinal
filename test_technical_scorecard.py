@@ -20,7 +20,7 @@ class TechnicalScorecardTests(unittest.TestCase):
 
     def test_breakout_and_two_volume_sessions(self):
         rows = sample()
-        for i in range(12, 22):
+        for i in range(11, 22):
             rows[i]["low"] = 47
         rows[-1]["close"] = 57
         rows[-1]["high"] = 58
