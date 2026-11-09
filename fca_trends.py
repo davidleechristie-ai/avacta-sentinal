@@ -21,6 +21,8 @@ def parse(rows):
         dates=[(k,_date(v)) for k,v in row.items() if any(t in str(k).lower() for t in ("date","as at"))]
         values=[(k,_pct(v)) for k,v in row.items() if any(t in str(k).lower() for t in ("position","percentage","aggregate")) and not any(t in str(k).lower() for t in ("date","holder","name"))]
         dates=[(k,v) for k,v in dates if v]
+        position_dates=[(k,v) for k,v in dates if "position date" in str(k).lower()]
+        if position_dates: dates=position_dates
         values=[(k,v) for k,v in values if v is not None]
         if len(dates)==1 and len(values)==1:
             points.append({"date":dates[0][1].isoformat(),"percent":values[0][1],"date_field":dates[0][0],"value_field":values[0][0]})
@@ -35,7 +37,7 @@ def trend(sources):
     if not current_points:
         return {"status":"REVIEW_REQUIRED","reason":"FCA field names or date format could not be parsed unambiguously","current_headers":current.get("headers",[])}
     latest=current_points[-1]
-    earlier=[p for p in history+current_points if p["date"]<latest["date"] and p["value_field"]==latest["value_field"]]
+    earlier=[p for p in history+current_points if p["date"]<latest["date"] and p["value_field"].strip().lower()==latest["value_field"].strip().lower()]
     earlier.sort(key=lambda p:p["date"])
     if not earlier:
         return {"status":"REVIEW_REQUIRED","latest":latest,"reason":"No comparable earlier dated observation; cannot infer direction"}
