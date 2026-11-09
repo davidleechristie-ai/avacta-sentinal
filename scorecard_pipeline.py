@@ -5,6 +5,7 @@ from pathlib import Path
 from evidence_scorecard import build
 from downside_guard import assess
 from retrospective import replay
+from risk_event import build_event
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -25,6 +26,8 @@ def main():
             downside["severity"]="UNKNOWN"
             downside["warnings"].append("STALE_OR_FUTURE_PRICE_DATA")
     result["downside_guard"]=downside
+    event=build_event(downside)
+    (directory/"risk_event.json").write_text(json.dumps(event,indent=2)+"\\n")
     if downside["severity"] in ("HIGH","CRITICAL"):
         result["status"]="DOWNSIDE_RISK_WARNING"
     (directory/"downside_retrospective.json").write_text(json.dumps(replay(observations),indent=2)+"\n")
