@@ -42,3 +42,23 @@ def render_chart(rows, levels=None, limit=70):
     parts.append(f'<circle cx="{x(len(bars)-1):.1f}" cy="{y(bars[-1][1]):.1f}" r="4" fill="#fff"/>')
     parts.append(f'<text x="55" y="365" fill="#b9c9da" font-size="12">{escape(bars[0][0])}</text><text x="815" y="365" text-anchor="end" fill="#b9c9da" font-size="12">{escape(bars[-1][0])}</text></svg>')
     return "".join(parts)
+
+def weekly_bars(rows):
+    """Aggregate completed daily bars into ISO trading weeks, including partial current week."""
+    from datetime import date
+    weeks={}
+    for bar in sorted(rows,key=lambda b:b.get("date","")):
+        try:
+            d=date.fromisoformat(str(bar["date"]))
+            close=float(bar["close"]);volume=float(bar["volume"])
+            if not (isfinite(close) and close>0 and isfinite(volume) and volume>=0):continue
+        except (KeyError,ValueError,TypeError):continue
+        year,week,_=d.isocalendar()
+        key=(year,week)
+        if key not in weeks:
+            weeks[key]={"date":d.isoformat(),"close":close,"volume":0,"sessions":0}
+        weeks[key]["date"]=d.isoformat()
+        weeks[key]["close"]=close
+        weeks[key]["volume"]+=volume
+        weeks[key]["sessions"]+=1
+    return [weeks[k] for k in sorted(weeks)]
