@@ -8,7 +8,7 @@ class AdapterTests(unittest.TestCase):
             with self.assertRaises(openbb_adapter.ProviderUnavailable):
                 openbb_adapter.fetch_avct_history()
     def test_default_instrument_is_avct_l(self):
-        self.assertEqual(openbb_adapter.fetch_avct_history.__defaults__[0], "2026-10-01")
+        self.assertEqual(openbb_adapter.fetch_avct_history.__defaults__[0], "2026-07-01")
 
 if __name__ == "__main__":
     unittest.main()
