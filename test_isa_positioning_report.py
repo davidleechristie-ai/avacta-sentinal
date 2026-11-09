@@ -33,6 +33,12 @@ class PositioningTests(unittest.TestCase):
         r=build_report(d,w,c,{},{"decision":"WAIT_FOR_CONFIRMATION"},{"severity":"NORMAL"})
         self.assertEqual(r["stance"],"CONSIDER_ADD_ONLY_AFTER_MANUAL_CHECKS")
         self.assertFalse(r["trade_signal"])
+    def test_claimed_verification_without_evidence_fails_closed(self):
+        d,w,c=self.fixture(price_source_status="INDEPENDENTLY_VERIFIED")
+        w.update(weekly_trend_pattern="HIGHER_HIGHS_AND_LOWS",weekly_breakout=True)
+        r=build_report(d,w,c,{},{"decision":"NO_ACTIONABLE_ORDERS"},{"severity":"NORMAL"})
+        self.assertFalse(r["data_quality"]["independently_verified_price"])
+        self.assertEqual(r["stance"],"WAIT_FOR_VERIFIED_EVIDENCE")
     def test_stale_session_blocks_add(self):
         d,w,c=self.fixture(price_session_gate="STALE",price_source_status="INDEPENDENTLY_VERIFIED")
         r=build_report(d,w,c,{},{"decision":"WAIT_FOR_VERIFIED_SESSION"},{"severity":"NORMAL"})
