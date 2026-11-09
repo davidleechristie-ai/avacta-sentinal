@@ -5,9 +5,14 @@ on:
     - cron: '19 * * * *'
 permissions:
   contents: read
+  pages: write
+  id-token: write
 jobs:
   probe:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +33,21 @@ jobs:
       - name: Assemble five-factor evidence scorecard
         if: always()
         run: python scorecard_pipeline.py
+      - name: Prepare read-only Pages dashboard
+        if: success()
+        run: |
+          mkdir -p public
+          cp artifacts/sentinel_dashboard.html public/index.html
+          printf 'User-agent: *\nDisallow: /\n' > public/robots.txt
+      - name: Upload GitHub Pages artifact
+        if: success()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - name: Deploy read-only dashboard to GitHub Pages
+        if: success()
+        id: deployment
+        uses: actions/deploy-pages@v4
       - name: Preserve diagnostic artifact
         if: always()
         uses: actions/upload-artifact@v4
