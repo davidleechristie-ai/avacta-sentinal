@@ -21,6 +21,7 @@ from isa_positioning_report import build_report, markdown as positioning_markdow
 from forward_levels import map_levels
 from sentinel_dashboard import write_dashboard
 from independent_price_verification import verify
+from secondary_price_feed import fetch_secondary, SecondaryFeedUnavailable
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -36,7 +37,23 @@ def main():
     downside=assess(completed)
     # A second independently sourced feed is not configured. Record the gap
     # explicitly rather than inferring verification from the primary provider.
-    corroboration=verify(completed,None,price.get('provider'),None)
+    try:
+        secondary=fetch_secondary()
+        # Explicit currency normalization is essential: Yahoo AVCT.L bars are
+        # quoted in GBp. Only compare when the second feed states its currency.
+        currency=str(secondary.get('currency') or '').upper()
+        if currency not in ('GBP','GBX','GBPENCE'):
+            raise SecondaryFeedUnavailable('Secondary feed currency not confirmed as GBP/GBp')
+        secondary_bars=secondary['observations']
+        if currency=='GBP':
+            secondary_bars=[{**bar,**{k:bar[k]*100 for k in ('open','high','low','close')}} for bar in secondary_bars]
+        # Require completed sessions on both feeds; never compare provisional candles.
+        second_completed,_,_=completed_rows(secondary_bars)
+        corroboration=verify(completed,second_completed,'yfinance',secondary['provider'])
+        corroboration['secondary_provider']=secondary['provider']
+    except SecondaryFeedUnavailable as exc:
+        corroboration=verify(completed,None,'yfinance',None)
+        corroboration['reason']=str(exc)
     (directory/'independent_price_verification.json').write_text(json.dumps(corroboration,indent=2)+'\n')
     downside["latest_provider_session"]=latest_date
     downside["latest_provider_session_gate"]=latest_gate
