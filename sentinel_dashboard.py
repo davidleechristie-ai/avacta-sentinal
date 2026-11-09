@@ -71,7 +71,7 @@ def render(report, scorecard=None):
     steer=thesis["view"]
     why=thesis["thesis"]+" "+thesis["decision"]+" "+str(report.get("rationale") or "")
     evidence=thesis["catalyst"]+" "+thesis["horizon"]
-    change=thesis["discriminators"]
+    change=thesis["discriminators"]+" Unresolved five-factor inputs: "+", ".join(thesis["missing_factors"])+"."
     next_event=thesis["confidence"]
     mechanism_html="<section class='card section'><h2>Competing market explanations — what would distinguish them?</h2>"+ "".join("<h3>"+e(m["name"])+"</h3><p><strong>Current interpretation:</strong> "+e(m["evidence"])+"</p><p><strong>Critical missing evidence:</strong> "+e(m["missing"])+"</p><p><strong>Discriminating test:</strong> "+e(m["test"])+"</p>" for m in thesis["mechanisms"])+"<small>"+e(thesis["limitations"])+"</small></section>"
     html="""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
