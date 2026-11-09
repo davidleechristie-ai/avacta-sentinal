@@ -77,7 +77,8 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
 <div class="two section">
 <section class="card"><h2>Evidence required before considering an add</h2><ul>{{ADD}}</ul></section>
 <section class="card"><h2>Evidence prompting a reduction review</h2><ul>{{REDUCE}}</ul></section></div>
-<section class="card section"><h2>Evidence audit</h2><p>Verification and confidence are displayed separately from the decision hypothesis.</p><table>{{AUDIT}}</table></section>\n<section class="card section"><h2>Safety & provenance</h2>
+<section class="card section"><h2>Evidence audit</h2><p>Verification and confidence are displayed separately from the decision hypothesis.</p><table>{{AUDIT}}</table></section>
+<section class="card section"><h2>Safety & provenance</h2>
 <ul><li>Completed-session accepted: {{SESSION}}</li><li>Independent price verification: {{VERIFIED}}</li><li>Pre-trade gate: {{PRETRADE}}</li><li>Catalyst outcomes verified: {{CATALYST_VERIFIED}}</li><li>All positions and order approvals remain outside this public workflow.</li></ul></section>
 <div class="footer">Research decision support only. Not a broker order, personalised execution instruction or prediction. No automatic trades. The long-term SIPP is excluded. Prices are pence (GBp).</div>
 </main></body></html>"""
