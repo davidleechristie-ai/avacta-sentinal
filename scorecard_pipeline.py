@@ -16,7 +16,13 @@ def main():
     research=json.loads(research_path.read_text()) if research_path.exists() else {}
     result=build(price,research)
     observations=price.get("observations",[])
-    downside=assess(observations)
+    # A provisional intraday bar must not suppress a valid prior completed-session warning.
+    latest_date=max((str(x.get("date",""))[:10] for x in observations),default=None)
+    latest_gate=session_gate(latest_date)
+    completed=[x for x in observations if session_gate(str(x.get("date",""))[:10])["status"]=="ACCEPTED"]
+    downside=assess(completed)
+    downside["latest_provider_session"]=latest_date
+    downside["latest_provider_session_gate"]=latest_gate
     gate=session_gate(downside.get("latest_session"))
     downside["session_gate"]=gate
     if gate["status"]!="ACCEPTED":
