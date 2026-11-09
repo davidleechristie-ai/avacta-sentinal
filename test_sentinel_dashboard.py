@@ -93,7 +93,7 @@ class DashboardTests(unittest.TestCase):
 
     def test_decision_steer_precedes_supporting_evidence(self):
         html=render(self.report())
-        self.assertIn("BROKEN SUPPORT: TEST SELLER EXHAUSTION",html)
+        self.assertIn("BROKEN-SUPPORT OVERHANG VS CATALYST REPRICING",html)
         self.assertIn("What changes the view",html)
         self.assertIn("Independent price verification outstanding",html)
         self.assertLess(html.index("Sentinel decision brief"),html.index("Annotated price and volume"))
@@ -110,7 +110,15 @@ class DashboardTests(unittest.TestCase):
 
     def test_analysis_does_not_claim_volume_proves_accumulation(self):
         html=render(self.report())
-        self.assertIn("not whether the net driver is selling, short covering or accumulation",html)
-        self.assertIn("former weekly support at 60.00p",html)
-        self.assertIn("already-disclosed science",html)
-        self.assertIn("not independently corroborated",html)
+        self.assertIn("Short covering or speculative event positioning",html)
+        self.assertIn("Former support is now a potential supply zone",html)
+        self.assertIn("already guided",html)
+        self.assertIn("LOW — independent market data missing",html)
+
+    def test_competing_hypotheses_do_not_assert_unverified_flows(self):
+        html=render(self.report())
+        self.assertIn("Competing market explanations",html)
+        self.assertIn("Critical missing evidence",html)
+        self.assertIn("Seller identity, broker inventory",html)
+        self.assertIn("event-gap risk",html)
+        self.assertNotIn("{{MECHANISMS}}",html)
