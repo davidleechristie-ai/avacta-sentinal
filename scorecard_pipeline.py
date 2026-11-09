@@ -17,6 +17,7 @@ from tradermonty_technical_review import report as technical_review
 from tradermonty_weekly import weekly_review
 from tradermonty_catalyst_overlay import assess_catalysts, combine
 from tradermonty_pretrade import check as pretrade_check
+from isa_positioning_report import build_report, markdown as positioning_markdown
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -47,6 +48,10 @@ def main():
     catalysts=assess_catalysts(research,result["decision_intelligence"]["as_of"])
     result["trading_skill_overlay"]=combine(result["decision_intelligence"],weekly,catalysts)
     result["manual_pretrade_gate"]=pretrade_check()
+    positioning=build_report(result["decision_intelligence"],weekly,catalysts,result["trading_skill_overlay"],result["manual_pretrade_gate"],downside)
+    result["isa_positioning"]=positioning
+    (directory/"isa_positioning_report.json").write_text(json.dumps(positioning,indent=2)+"\n")
+    (directory/"isa_positioning_report.md").write_text(positioning_markdown(positioning))
     (directory/"tradermonty_weekly.json").write_text(json.dumps(weekly,indent=2)+"\n")
     (directory/"tradermonty_catalysts.json").write_text(json.dumps(catalysts,indent=2)+"\n")
     (directory/"tradermonty_pretrade.json").write_text(json.dumps(result["manual_pretrade_gate"],indent=2)+"\n")
