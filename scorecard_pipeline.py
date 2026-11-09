@@ -13,6 +13,7 @@ from risk_transition import transition
 from decision_engine import build_decision
 from forward_signal_audit import audit
 from signal_baseline import compare
+from tradermonty_technical_review import report as technical_review
 def main():
     directory=Path("artifacts")
     directory.mkdir(parents=True,exist_ok=True)
@@ -39,6 +40,7 @@ def main():
         downside["warnings"].append("PRICE_SESSION_"+gate["status"])
     result["downside_guard"]=downside
     result["decision_intelligence"]=build_decision(downside, price.get("quality",{}))
+    (directory/"tradermonty_technical_review.json").write_text(json.dumps(technical_review(completed,downside,result["decision_intelligence"]),indent=2)+"\n")
     event=build_event(downside)
     (directory/"risk_event.json").write_text(json.dumps(event,indent=2)+"\n")
     if downside["severity"] in ("HIGH","CRITICAL"):
@@ -56,5 +58,7 @@ def main():
             out.write("## AVCT downside surveillance\n\n")
             out.write("**Severity:** "+downside["severity"]+"\n\n")
             out.write("**Signals:** "+(", ".join(downside["warnings"]) or "None confirmed")+"\n\n")
+            out.write("**Decision hypothesis:** "+result["decision_intelligence"]["decision"]+"\n\n")
+            out.write("**Source:** TraderMonty methodology; weekly chart review not performed automatically.\n\n")
             out.write("Research warning only; not an automated trade instruction.\n")
 if __name__=="__main__":main()
