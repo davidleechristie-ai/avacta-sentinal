@@ -10,7 +10,7 @@ def assess_structure(rows, lookback=10, volume_window=10):
             if isfinite(close) and close>0 and isfinite(volume) and volume>=0:
                 valid.append({"date":str(bar["date"]),"close":close,"volume":volume})
         except (KeyError,ValueError,TypeError):pass
-    if len(valid)<max(lookback+2,volume_window+2):
+    if len(valid)<max(lookback,volume_window)+1:
         return {"status":"INSUFFICIENT_DATA","events":[],"auto_trade":False}
     events=[]
     for i in range(max(lookback,volume_window),len(valid)):
