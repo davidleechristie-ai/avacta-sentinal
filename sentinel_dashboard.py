@@ -19,6 +19,7 @@ def render(report, scorecard=None):
               ("Positioning confidence",report.get("confidence","UNKNOWN"))]
         return "".join("<tr><th scope='row'>"+e(k)+"</th><td>"+e(v)+"</td></tr>" for k,v in rows)
     performance=scorecard.get("forward_signal_audit") or {}
+    chart=scorecard.get("technical_chart_html") or "<p>Chart unavailable until completed-session data is processed.</p>"
     def performance_table():
         summary=performance.get("summary") or {}
         if not summary:
@@ -116,6 +117,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
         "ADD":items(report.get("change_to_consider_add",[])),
         "REDUCE":items(report.get("change_to_review_reduction",[])),
         "AUDIT":audit_table(),
+        "CHART":chart,
         "PERFORMANCE":performance_table(),
         "SESSION":e(quality.get("completed_session_accepted")),
         "VERIFIED":e(quality.get("independently_verified_price")),
