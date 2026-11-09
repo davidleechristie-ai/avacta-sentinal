@@ -17,6 +17,8 @@ def main():
         status = 2
     path.write_text(json.dumps(result, indent=2, default=str) + "\n")
     print(result["status"], path)
+    if status:
+        print("PROVIDER_ERROR:", result.get("reason", "unknown"))
     return status
 
 if __name__ == "__main__":
