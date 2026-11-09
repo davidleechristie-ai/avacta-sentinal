@@ -60,6 +60,7 @@ jobs:
             artifacts/public_research.json
             artifacts/sentinel_scorecard.json
             artifacts/forward_levels.json
+            artifacts/independent_price_verification.json
             artifacts/isa_positioning_report.json
             artifacts/isa_positioning_report.md
             artifacts/sentinel_dashboard.html
