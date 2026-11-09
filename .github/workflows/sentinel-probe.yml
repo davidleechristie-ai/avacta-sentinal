@@ -37,6 +37,8 @@ jobs:
             artifacts/openbb_probe.json
             artifacts/public_research.json
             artifacts/sentinel_scorecard.json
+            artifacts/isa_positioning_report.json
+            artifacts/isa_positioning_report.md
             artifacts/downside_retrospective.json
             artifacts/forward_signal_audit.json
             artifacts/signal_baseline.json
