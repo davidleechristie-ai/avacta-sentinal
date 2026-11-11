@@ -6,6 +6,23 @@ from market_thesis import build as build_market_thesis
 
 def render(report, scorecard=None):
     scorecard=scorecard or {}
+    probe=scorecard.get("market_probe") or {}
+    probe_quality=probe.get("quality") or {}
+    probe_status=probe.get("status") or "NO_VERIFIED_DATA"
+    probe_date=probe_quality.get("last_completed_session_date")
+    report_date=(report.get("data_quality") or {}).get("completed_session_accepted")
+    from datetime import datetime, date, timezone
+    rendered_at=datetime.now(timezone.utc).isoformat(timespec="seconds")
+    def age_days(v):
+        try:
+            return (datetime.now(timezone.utc).date()-date.fromisoformat(str(v)[:10])).days
+        except (TypeError, ValueError):
+            return None
+    session_date=probe_date or report_date
+    session_age=age_days(session_date)
+    stale=bool(probe_quality.get("is_stale")) or session_age is None or session_age > 4 or session_age < 0
+    stale=stale or probe_status in ("STALE_BLOCKED","NO_VERIFIED_DATA")
+    data_state="STALE / UNAVAILABLE" if stale else ("UNVERIFIED / DELAYED" if probe_status!="VERIFIED" else "VERIFIED")
     def e(v):
         return escape("—" if v is None else str(v),quote=True)
     def number(v,suffix=""):
@@ -74,7 +91,7 @@ def render(report, scorecard=None):
     change=thesis["discriminators"]+" Unresolved five-factor inputs: "+", ".join(thesis["missing_factors"])+"."
     next_event=thesis["confidence"]
     mechanism_html="<section class='card section'><h2>Competing market explanations — what would distinguish them?</h2>"+ "".join("<h3>"+e(m["name"])+"</h3><p><strong>Current interpretation:</strong> "+e(m["evidence"])+"</p><p><strong>Critical missing evidence:</strong> "+e(m["missing"])+"</p><p><strong>Discriminating test:</strong> "+e(m["test"])+"</p>" for m in thesis["mechanisms"])+"<small>"+e(thesis["limitations"])+"</small></section>"
-    html="""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    html="""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-store, max-age=0">
 <title>Avacta Sentinel | ISA decision brief</title><style>
 :root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;background:#0b1220;color:#e8eef7}
 *{box-sizing:border-box}body{margin:0}main{max-width:1150px;margin:auto;padding:28px 20px 70px}
@@ -98,12 +115,13 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
 @media print{:root{color-scheme:light;background:white;color:#17202d}body{background:white}.card,.scenario,.hero{background:white;color:#17202d;border-color:#aaa}p,li,small,.subtle,.label{color:#344}a{color:#135b8a}.warning{background:#fff4e8;color:#653c13}}
 </style></head><body><main>
 <header><div><div class="brand">AVACTA SENTINEL / DECISION INTELLIGENCE</div><h1>ISA positioning brief</h1></div><div class="meta">AVCT.L · Research only<br>As of {{DATE}}</div></header>
+<div class="warning" role="status"><strong>Market data: {{DATA_STATE}}</strong> · Last completed session: {{SESSION_DATE}} · Probe generated: {{PROBE_TIME}} · Page built: {{RENDERED_AT}}. Historical prices are not live executable quotes. {{FRESHNESS_NOTE}}</div>
 <section class="hero"><div class="eyebrow">Sentinel decision brief · Short-term ISA</div><div class="stance">{{STEER}}</div><span class="pill">{{SEVERITY}} downside risk</span><div class="decision-list"><div class="decision-item"><h3>Why this steer</h3><p>{{WHY}}</p></div><div class="decision-item"><h3>Evidence observed</h3><p>{{EVIDENCE}}</p></div><div class="decision-item"><h3>What changes the view</h3><p>{{CHANGE}}</p></div></div><p><strong>Next catalyst:</strong> {{NEXT_EVENT}} · <strong>ISA exit:</strong> {{DEADLINE}}</p><div class="subtle">Research steer only · Independent price verification {{VERIFY_STATUS}} · Owner approval required · No automatic trades · Long-term SIPP excluded</div></section>
 {{MECHANISMS}}
 <div class="grid">
-<div class="card"><div class="label">Observed completed close</div><div class="value">{{CLOSE}}</div><small>Unverified feed; not a live quote</small></div>
+<div class="card"><div class="label">Historical completed close · {{SESSION_DATE}}</div><div class="value">{{CLOSE}}</div><small>{{DATA_STATE}} · Not a live quote</small></div>
 <div class="card"><div class="label">Days until ISA exit</div><div class="value">{{DAYS}}</div><small>Deadline {{DEADLINE}}</small></div>
-<div class="card"><div class="label">Weekly structure</div><div class="value" style="font-size:17px">{{TREND}}</div><small>Chart image not reviewed</small></div>
+<div class="card"><div class="label">Historical weekly structure</div><div class="value" style="font-size:17px">{{TREND}}</div><small>As of {{SESSION_DATE}}; not a current signal</small></div>
 <div class="card"><div class="label">Relative weekly volume</div><div class="value">{{VOLUME}}</div><small>Historical comparison</small></div></div>
 <div class="warning"><strong>Data-quality gate:</strong> {{QUALITY}}. No executable entry permission is granted by this dashboard.</div>
 <section class="card section"><h2>Annotated price and volume</h2><p>Completed-session closing prices, observed historical levels and volume. Prices remain independently unverified.</p>{{CHART}}<h3 style="margin-top:24px">Weekly trend · up to 26 trading weeks</h3><p>Weekly closing prices and summed volume. The latest week may be incomplete; annotations remain historical and unverified.</p>{{WEEKLY_CHART}}</section>
@@ -134,6 +152,7 @@ a{color:#9ac7fb;overflow-wrap:anywhere}.kv{display:grid;grid-template-columns:1f
         cat="<p>No upcoming registry event within the ISA horizon.</p>"
     rule_html="<ul>"+items([key.replace("_"," ").title()+": "+val for key,val in events.items()])+"</ul>"
     substitutions={
+        "DATA_STATE":e(data_state),"SESSION_DATE":e(session_date or "Unknown"),"PROBE_TIME":e(probe.get("generated_at_utc") or "Unavailable"),"RENDERED_AT":e(rendered_at),"FRESHNESS_NOTE":e("Current signals blocked until fresh completed-session data is available." if stale else "Awaiting independent provider verification."),
         "DATE":e(report.get("as_of")),"STANCE":e(stance.replace("_"," ")),"SEVERITY":e(severity),
         "STEER":e(steer),"WHY":e(why),"EVIDENCE":e(evidence),"CHANGE":e(change),
         "NEXT_EVENT":e(next_event),"VERIFY_STATUS":e("confirmed" if verified else "outstanding"),
