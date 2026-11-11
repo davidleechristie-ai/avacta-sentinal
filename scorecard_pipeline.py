@@ -32,6 +32,8 @@ def main():
     price=json.loads(price_path.read_text()) if price_path.exists() else {}
     research=json.loads(research_path.read_text()) if research_path.exists() else {}
     result=build(price,research)
+    # Publish the probe freshness metadata to the same artifact used to render Pages.
+    result["market_probe"] = {"status": price.get("status", "NO_VERIFIED_DATA"), "generated_at_utc": price.get("generated_at_utc"), "quality": price.get("quality") or {}}
     observations=price.get("observations",[])
     # A provisional intraday bar must not suppress a valid prior completed-session warning.
     clean,rejected=clean_bars(observations)
